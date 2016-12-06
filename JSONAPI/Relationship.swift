@@ -8,24 +8,55 @@
 
 import Foundation
 
-public struct Relationship {
-    let id: String
-    let type: String
+public enum Relationship {
+    public struct Info {
+        public let id: String
+        public let type: String
 
-    init(_ raw: Any) throws {
-        guard let data = raw as? [String: Any] else {
-            throw Parser.ParserError.unexpectedRoot
+        init(_ raw: [String: String]) throws {
+            guard let id = raw[Parser.id] else {
+                throw Parser.ParserError.missingObjectForKey(Parser.id)
+            }
+            guard let type = raw[Parser.type] else {
+                throw Parser.ParserError.missingObjectForKey(Parser.type)
+            }
+            self.id = id
+            self.type = type
         }
-        guard let hash = data[Parser.data] as? [String: String] else {
-            throw Parser.ParserError.missingObjectForKey(Parser.data)
+    }
+
+    case multi([Info])
+    case single(Info)
+    case null
+
+    public var singleID: String? {
+        switch self {
+        case .single(let info):
+            return info.id
+        default:
+            return nil
         }
-        guard let id = hash[Parser.id] else {
-            throw Parser.ParserError.missingObjectForKey(Parser.id)
+    }
+}
+
+internal func relationshipBuilder(_ raw: Any) throws -> Relationship {
+    guard let root = raw as? [String: Any] else {
+        throw Parser.ParserError.unexpectedRoot
+    }
+
+    if let single = root[Parser.data] as? [String: String] {
+        let info = try Relationship.Info(single)
+        return Relationship.single(info)
+    } else if let multi = root[Parser.data] as? [[String: String]] {
+        var infos: [Relationship.Info] = []
+        try multi.forEach() {
+            let info = try Relationship.Info($0)
+            infos.append(info)
         }
-        guard let type = hash[Parser.type] else {
-            throw Parser.ParserError.missingObjectForKey(Parser.type)
-        }
-        self.id = id
-        self.type = type
+        return Relationship.multi(infos)
+    } else if root[Parser.data] is NSNull {
+        return Relationship.null
+    } else {
+        throw Parser.ParserError.missingObjectForKey(Parser.data)
     }
 }

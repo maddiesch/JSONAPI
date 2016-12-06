@@ -57,6 +57,15 @@ public enum Attribute {
         }
     }
 
+    public var iso8601: Date? {
+        switch self {
+        case .string(let string):
+            return ISO8601DateFormatter().date(from: string)
+        default:
+            return nil
+        }
+    }
+
     init(_ raw: Any) {
         switch raw {
         case is NSNull:

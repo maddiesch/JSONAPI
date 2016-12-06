@@ -32,7 +32,18 @@ public final class Parser {
     }
 
     public class func parse(objects: Any) throws -> [Resource] {
-        throw ParserError.unknownError
+        guard let root = objects as? [String: Any] else {
+            throw ParserError.unexpectedRoot
+        }
+        guard let data = root[Parser.data] as? [[String: Any]] else {
+            throw ParserError.missingObjectForKey(Parser.data)
+        }
+        var resources: [Resource] = []
+        try data.forEach { (hash) in
+            let resource = try self.createResource(object: hash)
+            resources.append(resource)
+        }
+        return resources
     }
 
     // MARK: - Helpers
@@ -65,7 +76,7 @@ public final class Parser {
     private class func createRelationships(hash: [String: Any]) throws -> [String: Relationship] {
         var relationships: [String: Relationship] = [:]
         try hash.forEach() { (key, value) in
-            relationships[key] = try Relationship(value)
+            relationships[key] = try relationshipBuilder(value)
         }
         return relationships
     }
