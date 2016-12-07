@@ -37,6 +37,15 @@ public enum Relationship {
             return nil
         }
     }
+
+    public var multipleIDs: [String]? {
+        switch self {
+        case .multi(let infos):
+            return infos.map() { $0.id }
+        default:
+            return nil
+        }
+    }
 }
 
 internal func relationshipBuilder(_ raw: Any) throws -> Relationship {
