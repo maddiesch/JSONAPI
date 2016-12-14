@@ -57,10 +57,19 @@ public enum Attribute {
         }
     }
 
-    public var iso8601: Date? {
+    public var iso8601Date: Date? {
         switch self {
         case .string(let string):
-            return ISO8601DateFormatter().date(from: string)
+            return ISO8601Date(from: string)
+        default:
+            return nil
+        }
+    }
+
+    public var iso8601DateTime: Date? {
+        switch self {
+        case .string(let string):
+            return ISO8601DateTime(from: string)
         default:
             return nil
         }
@@ -80,4 +89,20 @@ public enum Attribute {
             self = .unknown(raw)
         }
     }
+}
+
+fileprivate func ISO8601Date(from string: String) -> Date? {
+    let fmt = DateFormatter()
+    fmt.timeZone = TimeZone(identifier: "UTC")
+    fmt.locale = Locale(identifier: "en_US_POSIX")
+    fmt.dateFormat = "yyyy-MM-dd";
+    return fmt.date(from: string)
+}
+
+fileprivate func ISO8601DateTime(from string: String) -> Date? {
+    let fmt = DateFormatter()
+    fmt.timeZone = TimeZone(identifier: "UTC")
+    fmt.locale = Locale(identifier: "en_US_POSIX")
+    fmt.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ";
+    return fmt.date(from: string)
 }
